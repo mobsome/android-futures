@@ -1,0 +1,88 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionName VERSION_NAME
+        archivesBaseName = ARTIFACT_ID
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath = configurations.compile
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            groupId GROUP
+            artifactId ARTIFACT_ID
+            version VERSION_NAME
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+}
+
+version = VERSION_NAME
+group = GROUP
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    configurations = ['archives']
+    publications = ['MyPublication']
+    pkg {
+        repo = 'maven'
+        name = project.getRootProject().property('ARTIFACT_ID')
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/mobsome/android-futures.git'
+        version {
+            name = project.getRootProject().property('VERSION_NAME')
+            desc = 'Guava\'s ListenableFutures extension for Android'
+            vcsTag = project.getRootProject().property('VERSION_NAME')
+            gpg {
+                sign = true
+                passphrase = System.getenv('GPG_PASSWORD')
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-all:2.0.2-beta'
+    compile 'com.android.support:support-annotations:23.3.0'
+    compile 'com.google.guava:guava:19.0'
+}
