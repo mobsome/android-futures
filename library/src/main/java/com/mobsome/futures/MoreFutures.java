@@ -22,9 +22,11 @@ import android.support.annotation.Nullable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
@@ -221,5 +223,25 @@ public class MoreFutures {
     public static <T> ListenableFuture<Void> ignoreValue(@NonNull ListenableFuture<T> future) {
         Preconditions.checkNotNull(future, "future must not be null");
         return Futures.transform(future, MoreFutures.<T, Void>identity(null));
+    }
+
+    /**
+     * Forwards result of a {@link java.util.concurrent.Future} to a different future
+     *
+     * @param deliverer {@link java.util.concurrent.Future} that delivers result
+     * @param receiver  {@link java.util.concurrent.Future} that receives result
+     */
+    public static <U> void forwardResult(final ListenableFuture<U> deliverer, final SettableFuture<U> receiver) {
+        Futures.addCallback(deliverer, new FutureCallback<U>() {
+            @Override
+            public void onSuccess(@Nullable U result) {
+                receiver.set(result);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                receiver.setException(t);
+            }
+        });
     }
 }
