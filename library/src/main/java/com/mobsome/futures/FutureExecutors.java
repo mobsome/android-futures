@@ -19,20 +19,35 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Factory and utility methods for {@link java.util.concurrent.Executor}, {@link
  * ExecutorService}
  */
 public class FutureExecutors {
-    private static Executor mainThreadExecutor = new Executor() {
+    private static final ListeningExecutorService ioExecutor =
+            com.google.common.util.concurrent.MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+    private static final ScheduledExecutor mainThreadExecutor = new ScheduledExecutor() {
         private final Handler handler = new Handler(Looper.getMainLooper());
 
         @Override
         public void execute(@NonNull Runnable command) {
             this.handler.post(command);
+        }
+
+        @Override
+        public void execute(@NonNull Runnable r, long delay, @NonNull TimeUnit unit) {
+            this.handler.postDelayed(r, unit.toMillis(delay));
+        }
+
+        @Override
+        public void cancel(@NonNull Runnable r) {
+            this.handler.removeCallbacks(r);
         }
     };
 
@@ -41,7 +56,16 @@ public class FutureExecutors {
      *
      * @return Android UI thread executor
      */
-    public static Executor mainThreadExecutor() {
+    public static ScheduledExecutor mainThreadExecutor() {
         return mainThreadExecutor;
+    }
+
+    /**
+     * Executor for common I/O operations
+     *
+     * @return I/O executor
+     */
+    public static ListeningExecutorService ioExecutor() {
+        return ioExecutor;
     }
 }
