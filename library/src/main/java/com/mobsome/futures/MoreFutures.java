@@ -230,6 +230,7 @@ public class MoreFutures {
      *
      * @param deliverer {@link java.util.concurrent.Future} that delivers result
      * @param receiver  {@link java.util.concurrent.Future} that receives result
+     * @param <U>       input type of the future
      */
     public static <U> void forwardResult(final ListenableFuture<U> deliverer, final SettableFuture<U> receiver) {
         Futures.addCallback(deliverer, new FutureCallback<U>() {

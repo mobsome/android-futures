@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
-apply plugin: 'maven-publish'
+apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion 23
@@ -21,52 +21,21 @@ android {
     }
 }
 
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath = configurations.compile
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives javadocJar
-    archives sourcesJar
-}
-
-publishing {
-    publications {
-        MyPublication(MavenPublication) {
-            groupId GROUP
-            artifactId ARTIFACT_ID
-            version VERSION_NAME
-            artifact sourcesJar
-            artifact javadocJar
-        }
-    }
-}
-
 version = VERSION_NAME
 group = GROUP
+def siteUrl = 'https://github.com/mobsome/android-futures.git'
+def cmsUrl = 'https://github.com/mobsome/android-futures'
 
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
     configurations = ['archives']
-    publications = ['MyPublication']
     pkg {
         repo = 'maven'
         name = project.getRootProject().property('ARTIFACT_ID')
         licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/mobsome/android-futures.git'
+        vcsUrl = cmsUrl
+        publicDownloadNumbers = true
         version {
             name = project.getRootProject().property('VERSION_NAME')
             desc = 'Guava\'s ListenableFutures extension for Android'
@@ -86,4 +55,63 @@ dependencies {
     testCompile 'org.mockito:mockito-all:2.0.2-beta'
     compile 'com.android.support:support-annotations:23.3.0'
     compile 'com.google.guava:guava:19.0'
+}
+
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                packaging 'aar'
+                name 'Guava\'s ListenableFutures extension for Android'
+                url siteUrl
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'mobsome'
+                        name 'Wojciech Ostrowski'
+                        email 'wojciech.ostrowski@mobsome.com'
+                    }
+                }
+                scm {
+                    connection cmsUrl
+                    developerConnection cmsUrl
+                    url siteUrl
+
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath = configurations.compile
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+task findConventions << {
+    println project.getConvention()
 }
