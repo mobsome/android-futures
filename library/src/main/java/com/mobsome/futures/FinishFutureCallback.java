@@ -23,7 +23,6 @@ import com.google.common.util.concurrent.FutureCallback;
  * A callback for accepting the results of a {@link java.util.concurrent.Future}
  * computation asynchronously that has only one callback method which is called once the
  * {@link java.util.concurrent.Future} computation is done (successful or failed)
- * <p>
  * <p>To attach to a {@link com.google.common.util.concurrent.ListenableFuture}
  * use {@link com.google.common.util.concurrent.Futures#addCallback}.
  */
@@ -47,6 +46,8 @@ public abstract class FinishFutureCallback<T> implements FutureCallback<T> {
 
     /**
      * Invoked when the {@code Future} computation is finished, regardless if successful or failed.
+     *
+     * @param success whether result of computation was successful
      */
     protected abstract void onFinished(boolean success);
 }
